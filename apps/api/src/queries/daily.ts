@@ -1,17 +1,6 @@
 import { sql } from 'kysely';
+import type { DailyStatsRow } from '@repo/shared';
 import { db } from '../db/client.ts';
-
-export interface DailyStatsRow {
-  date: string;
-  productionKwh: number | null;
-  consumptionKwh: number | null;
-  averagePriceSntKwh: number | null;
-  productionHoursReported: number;
-  consumptionHoursReported: number;
-  priceHoursReported: number;
-  hoursTotal: number;
-  longestNegativePriceStreakHours: number;
-}
 
 export async function getDailyStats(): Promise<DailyStatsRow[]> {
   const result = await sql<DailyStatsRow>`

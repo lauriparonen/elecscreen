@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@repo/shared": "workspace:*",
     "fastify": "^5.12.1",
     "fastify-type-provider-zod": "^7.0.0",
     "kysely": "^0.29.5",

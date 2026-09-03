@@ -17,6 +17,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       fastify:
         specifier: ^5.12.1
         version: 5.12.1
@@ -42,6 +45,12 @@ importers:
       tsx:
         specifier: ^4.23.13
         version: 4.23.13
+
+  packages/shared:
+    dependencies:
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
 
 packages:
 
