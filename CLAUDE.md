@@ -12,14 +12,14 @@ Deliverable: a public GitHub repo link. AI tool usage must be disclosed in the R
 
 Single table `electricityData` in the provided `init-db.tar.gz`:
 
-| Column              | Type          | Unit          | Nullable | Notes                                       |
-| ------------------- | ------------- | ------------- | -------- | ------------------------------------------- |
-| `id`                | integer PK    | —             | no       |                                             |
-| `date`              | DATE          | —             | no       | Finland local date                          |
-| `startTime`         | TIMESTAMP     | —             | no       | verify tz-awareness before writing queries  |
-| `productionAmount`  | NUMERIC(11,5) | MWh/h         | yes      |                                             |
-| `consumptionAmount` | NUMERIC(11,3) | kWh           | yes      |                                             |
-| `hourlyPrice`       | NUMERIC(6,3)  | snt/kWh (VAT-incl) | yes | from porssisahko.net                        |
+| Column              | Type          | Unit               | Nullable | Notes                                      |
+| ------------------- | ------------- | ------------------ | -------- | ------------------------------------------ |
+| `id`                | integer PK    | —                  | no       |                                            |
+| `date`              | DATE          | —                  | no       | Finland local date                         |
+| `startTime`         | TIMESTAMP     | —                  | no       | verify tz-awareness before writing queries |
+| `productionAmount`  | NUMERIC(11,5) | MWh/h              | yes      |                                            |
+| `consumptionAmount` | NUMERIC(11,3) | kWh                | yes      |                                            |
+| `hourlyPrice`       | NUMERIC(6,3)  | snt/kWh (VAT-incl) | yes      | from porssisahko.net                       |
 
 Column names are camelCase and were created quoted, so raw SQL must double-quote them: `"productionAmount"`.
 
@@ -30,7 +30,7 @@ Column names are camelCase and were created quoted, so raw SQL must double-quote
 3. **DST.** Finland (Europe/Helsinki) has 23-hour and 25-hour days twice a year. Do **not** assume 24 rows per date. Group by the `date` column, not by dividing timestamps.
 4. **Nullable metric columns.** All three metric columns can be null. Aggregates need per-metric null handling, and the UI should surface a data-coverage indicator (e.g. "22/24 hours reported") rather than silently dropping nulls.
 5. **`NUMERIC` returns as string in node-pg.** JS numbers can't safely hold arbitrary-precision decimals. Strategy: keep raw columns typed as `string | null` in the Kysely `Database` interface, and cast to `::float8` inside aggregation queries so results come back as JS numbers. Override the `DATE` (oid 1082) parser to return raw `YYYY-MM-DD` strings and avoid timezone shifts.
-6. **Longest consecutive negative-price streak** is a classic *gaps-and-islands* problem. Solve it in SQL (window functions), not in application code.
+6. **Longest consecutive negative-price streak** is a classic _gaps-and-islands_ problem. Solve it in SQL (window functions), not in application code.
 
 ## Architecture
 
@@ -52,7 +52,7 @@ Monorepo, TypeScript end-to-end.
 ├─ login.png                  upstream, DO NOT modify
 ├─ README.md                  ours — must credit upstream and disclose AI usage
 ├─ CLAUDE.md                  this file
-├─ docs               
+├─ docs
 │  ├─ plan.md                 general project through-line, both agent-and-human-readable
 ├─ package.json               workspace root, private, no runtime deps
 ├─ pnpm-workspace.yaml
@@ -97,9 +97,11 @@ Monorepo, TypeScript end-to-end.
 ## Features (priority order)
 
 **Required:**
+
 - Daily statistics list: per date, show total consumption, total production, average price, longest consecutive negative-price streak in hours.
 
 **Optional (implement in this order):**
+
 - Pagination
 - Per-column ordering
 - Search
@@ -108,13 +110,14 @@ Monorepo, TypeScript end-to-end.
 - Graph visualization on the single-day view
 
 **Bonus:**
+
 - Backend in Docker (add a Dockerfile in `apps/api/`)
 - Cloud deploy (link from README)
 - Playwright E2E tests
 
 ## Working style
 
-- Small verifiable steps. 
+- Small verifiable steps.
 - Iterate on failure: if verification fails, capture what happened, fix, and note the fix in the task file's "Notes" section so we don't hit the same wall twice.
 - Prefer editing existing files over creating new ones.
 - Ask before doing anything destructive (deleting files, rewriting upstream files, force-pushing).
