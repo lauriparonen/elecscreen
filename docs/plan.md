@@ -49,11 +49,18 @@ Goal: `curl localhost:3000/health` returns `{ok: true}`, and one real endpoint r
 
 Goal: table on screen showing real data from the api.
 
-- [ ] `apps/web` workspace: vite, react, tanstack-query, tanstack-table, tailwind
-- [ ] Vite dev proxy to api (so no CORS config needed in dev)
-- [ ] `features/daily-list/`: query hook + table component
-- [ ] Import types from `@repo/shared`, validate response with zod at the boundary
-- [ ] Basic styling — readable, not pretty yet
+- [x] `apps/web` workspace: vite, react, tanstack-query, tanstack-table, tailwind
+- [x] Vite dev proxy to api (so no CORS config needed in dev)
+- [x] `features/daily-list/`: query hook + table component
+- [x] Import types from `@repo/shared`, validate response with zod at the boundary
+- [x] Basic styling — readable, not pretty yet
+
+### Phase 3 notes
+
+- Vite pinned to `^7.3.6` (not 8). Vite 8 uses rolldown, whose native binding is delivered via optional deps and pnpm 10 didn't materialise `@rolldown/binding-win32-x64-msvc` on this Windows/node 20 setup — `pnpm dev` crashed on boot with `Cannot find native binding`. Vite 7 is still rollup-based and works out of the box.
+- Tailwind v4 via `@tailwindcss/vite`; no `tailwind.config.*` needed, single `@import 'tailwindcss'` in `src/index.css`.
+- `@tanstack/react-table` installed but unused for now — plain `<table>` for phase 3, will wire the table instance when sorting/pagination lands in Phase 5.
+- Zod validates the API response at the fetch boundary (`fetchJson<S extends z.ZodType>`), so anything the api adds/changes surfaces as a parse error rather than silent UI drift.
 
 ## Phase 4 — Required feature complete
 
