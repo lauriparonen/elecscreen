@@ -7,10 +7,12 @@ Working doc. Check things off as they land. Notes and decisions inline.
 - [x] Fork/remote setup verified (origin = mine, upstream = solita)
 - [x] Root scaffolding: pnpm workspaces, tsconfig.base, prettier, gitignore
 - [x] `pnpm install` clean, `pnpm format:check` green
-- [ ] Confirm docker db comes up: `docker compose up -d`, then `psql` in and eyeball a few rows
-  - [ ] Verify `startTime` column type (TIMESTAMP vs TIMESTAMPTZ) — matters for DST handling
-  - [ ] Verify `hourlyPrice` unit by sample values — confirmed snt/kWh from source docs
-  - [ ] Note the date range in the seed data (affects what "today" queries return)
+- [x] Confirm docker db comes up: `docker compose up -d`, then `psql` in and eyeball a few rows
+  - [x] Verify `starttime` column type — `timestamp without time zone`. DST caveat still applies; group by `date`, not by dividing timestamps.
+  - [x] Verify `hourlyprice` unit by sample values — min -50, max 235.104, avg ~10.35 → consistent with snt/kWh (VAT-incl).
+  - [x] Note seed date range: 2020-12-31 → 2024-10-01, 1371 distinct dates. Early rows have null consumption/price (rows exist for 2020-12-31 22:00/23:00 with only production filled) — nulls per-column are real, not just theoretical.
+  - Schema surprise: actual column/table names are lowercase unquoted (`electricitydata`, `starttime`, `productionamount`, `consumptionamount`, `hourlyprice`, `date`, `id`). Original brief's camelCase was misleading. `id` is `bigint`, not `integer`. Only `id` is `NOT NULL` — every metric column plus `date` and `starttime` are nullable.
+  - Timestamp convention TBD: row 1 has `date=2020-12-31`, `starttime=2020-12-31 22:00:00`. If UTC, that's 2021-01-01 00:00 Finland local — but `date` matches the UTC calendar day, so `date` looks like `starttime::date` (UTC-based). Need to decide whether the UI presents "days" as UTC or Europe/Helsinki when building `/api/daily`.
 
 ## Phase 1 — Backend skeleton
 
