@@ -41,9 +41,9 @@ Goal: `curl localhost:3000/health` returns `{ok: true}`, and one real endpoint r
 
 ## Phase 2 — Shared schemas
 
-- [ ] `packages/shared`: extract the zod schemas from the api into here
-- [ ] Api imports from `@repo/shared` instead of defining locally
-- [ ] Confirm workspace linking works (change a schema in shared, api picks it up)
+- [x] `packages/shared`: extract the zod schemas from the api into here
+- [x] Api imports from `@repo/shared` instead of defining locally
+- [x] Confirm workspace linking works (change a schema in shared, api picks it up)
 
 ## Phase 3 — Frontend skeleton
 
