@@ -83,3 +83,4 @@ Goal: table on screen showing real data from the api.
 <!-- append decisions as they're made, dated -->
 
 - YYYY-MM-DD: chose X over Y because ...
+- 2026-09-03: `/api/daily` groups by the stored `date` column as-is (UTC-derived). Rationale: data is from Fingrid + porssisahko, and porssisahko's public docs state they deliberately key on ISO-8601 UTC "koska kesäajan alkaessa ja päättyessä ei tapahdu erikoistapausta kuten paikallisessa ajassa tapahtuu". Trusting the source's own UTC day boundary keeps hour counts consistent across DST. Document in the README.
