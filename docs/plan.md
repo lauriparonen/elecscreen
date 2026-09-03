@@ -22,13 +22,22 @@ Goal: `curl localhost:3000/health` returns `{ok: true}`, and one real endpoint r
 - [x] Handwrite `db/types.ts` — the `Database` interface for the one table
 - [x] `db/client.ts` — pg pool + kysely + DATE parser override
 - [x] `/health` endpoint (proves fastify + zod wiring works before touching db)
-- [ ] `/api/daily` endpoint returning the daily-stats list (no pagination yet, just make it work)
+- [x] `/api/daily` endpoint returning the daily-stats list (no pagination yet, just make it work)
   - Query design decisions to make here:
-    - [ ] Handling nulls: `SUM` ignores nulls but should the response distinguish "0 hours reported" from "24 hours reported all zero"? → probably yes, add `hoursReported` field per metric
-    - [ ] Unit normalization: convert production MWh → kWh in the query, so response is uniformly in kWh
-    - [ ] Longest negative streak: SQL window function (gaps-and-islands). Draft in psql first, port to kysely `sql\`...\`` fragment
-- [ ] Manually hit endpoint with curl/httpie, eyeball a few days, sanity check numbers
+    - [x] Handling nulls: `SUM` ignores nulls but should the response distinguish "0 hours reported" from "24 hours reported all zero"? → probably yes, add `hoursReported` field per metric
+    - [x] Unit normalization: convert production MWh → kWh in the query, so response is uniformly in kWh
+    - [x] Longest negative streak: SQL window function (gaps-and-islands). Draft in psql first, port to kysely `sql\`...\`` fragment
+- [x] Manually hit endpoint with curl/httpie, eyeball a few days, sanity check numbers
   - Rough sanity: finland uses ~80 TWh/yr, so a day is ~220 GWh = 220_000_000 kWh nationally. seed data may be a subset — just check it's in a reasonable order of magnitude, not garbage.
+
+### /api/daily notes
+
+- Response shape (flat, per row): `date`, `productionKwh`, `consumptionKwh`, `averagePriceSntKwh`, `productionHoursReported`, `consumptionHoursReported`, `priceHoursReported`, `hoursTotal`, `longestNegativePriceStreakHours`. Wrapped in `{ data: [...] }`.
+- Null strategy: metric fields nullable (SUM/AVG of all-null → null). Per-metric `hoursReported` lets the UI distinguish "no data reported" from "reported and zero".
+- Unit normalization at the SQL layer: production MWh → kWh via `* 1000`; consumption already kWh; price stays snt/kWh. All aggregates cast `::float8` so pg returns JS numbers, not strings.
+- Negative-price streak: gaps-and-islands CTE using `((hourlyprice < 0) IS TRUE)` as the run predicate — a null-price hour is treated as "not negative", correctly breaking a streak instead of silently spanning across a data gap. Drafted in `scratchpad/daily.sql` first, then ported to a Kysely `sql\`...\`` fragment in [apps/api/src/queries/daily.ts](apps/api/src/queries/daily.ts).
+- Verification: 1371 rows returned (matches distinct-date count). 2024-09-29 has a 3-hour negative streak at avg 0.69 snt/kWh — matches psql draft. 2020-12-31 boundary: 2 hours, no price → `averagePriceSntKwh: null`, streak 0.
+- Consumption coverage (verified in adminer): `consumptionamount` is null in 10,186 of 32,838 rows (~31%). Filled span is roughly 2023–2024; null elsewhere, including a tail gap in Sep–Oct 2024. UI needs to render "no consumption reported" days without crashing, but it's not the majority case.
 
 ## Phase 2 — Shared schemas
 

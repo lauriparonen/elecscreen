@@ -5,6 +5,7 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { registerDailyRoutes } from './routes/daily.ts';
 
 export function build(): FastifyInstance {
   const app = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
@@ -23,6 +24,8 @@ export function build(): FastifyInstance {
     },
     async () => ({ ok: true as const }),
   );
+
+  void registerDailyRoutes(app);
 
   return app;
 }
