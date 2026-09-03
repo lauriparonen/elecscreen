@@ -18,10 +18,10 @@ Working doc. Check things off as they land. Notes and decisions inline.
 
 Goal: `curl localhost:3000/health` returns `{ok: true}`, and one real endpoint returns real data from the db.
 
-- [ ] `apps/api` workspace: fastify, kysely, pg, zod, tsx (for dev), fastify-type-provider-zod
-- [ ] Handwrite `db/types.ts` — the `Database` interface for the one table
-- [ ] `db/client.ts` — pg pool + kysely + DATE parser override
-- [ ] `/health` endpoint (proves fastify + zod wiring works before touching db)
+- [x] `apps/api` workspace: fastify, kysely, pg, zod, tsx (for dev), fastify-type-provider-zod
+- [x] Handwrite `db/types.ts` — the `Database` interface for the one table
+- [x] `db/client.ts` — pg pool + kysely + DATE parser override
+- [x] `/health` endpoint (proves fastify + zod wiring works before touching db)
 - [ ] `/api/daily` endpoint returning the daily-stats list (no pagination yet, just make it work)
   - Query design decisions to make here:
     - [ ] Handling nulls: `SUM` ignores nulls but should the response distinguish "0 hours reported" from "24 hours reported all zero"? → probably yes, add `hoursReported` field per metric
