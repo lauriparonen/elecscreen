@@ -2,7 +2,7 @@ import { useDaily } from './useDaily.ts';
 import { formatCoverage, formatKwh, formatPrice } from '../../lib/format.ts';
 
 export function DailyList() {
-  const { data, isPending, isError, error } = useDaily();
+  const { data, isPending, isError, error, refetch, isFetching } = useDaily();
 
   if (isPending) {
     return <p className="py-8 text-center text-sm text-slate-500">Loading…</p>;
@@ -10,9 +10,19 @@ export function DailyList() {
 
   if (isError) {
     return (
-      <p className="py-8 text-center text-sm text-red-600">
-        Failed to load: {error instanceof Error ? error.message : String(error)}
-      </p>
+      <div className="flex flex-col items-center gap-3 py-8 text-sm">
+        <p className="text-red-600">
+          Failed to load: {error instanceof Error ? error.message : String(error)}
+        </p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isFetching ? 'Retrying…' : 'Retry'}
+        </button>
+      </div>
     );
   }
 

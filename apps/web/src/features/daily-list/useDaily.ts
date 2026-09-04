@@ -6,5 +6,6 @@ export function useDaily() {
   return useQuery<DailyResponse>({
     queryKey: ['daily'],
     queryFn: () => fetchJson('/api/daily', dailyResponse),
+    retry: 1,
   });
 }
