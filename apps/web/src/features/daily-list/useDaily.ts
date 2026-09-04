@@ -7,19 +7,30 @@ import {
 } from '@repo/shared';
 import { fetchJson } from '../../api/client.ts';
 
-export function useDaily(
-  page: number,
-  pageSize: number,
-  sortBy: DailySortBy,
-  sortDir: DailySortDir,
-) {
+export interface DailyParams {
+  page: number;
+  pageSize: number;
+  sortBy: DailySortBy;
+  sortDir: DailySortDir;
+  dateFrom?: string;
+  dateTo?: string;
+  q?: string;
+}
+
+export function useDaily(params: DailyParams) {
+  const search = new URLSearchParams({
+    page: String(params.page),
+    pageSize: String(params.pageSize),
+    sortBy: params.sortBy,
+    sortDir: params.sortDir,
+  });
+  if (params.dateFrom) search.set('dateFrom', params.dateFrom);
+  if (params.dateTo) search.set('dateTo', params.dateTo);
+  if (params.q) search.set('q', params.q);
+
   return useQuery<DailyResponse>({
-    queryKey: ['daily', page, pageSize, sortBy, sortDir],
-    queryFn: () =>
-      fetchJson(
-        `/api/daily?page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`,
-        dailyResponse,
-      ),
+    queryKey: ['daily', params],
+    queryFn: () => fetchJson(`/api/daily?${search.toString()}`, dailyResponse),
     retry: 1,
     placeholderData: keepPreviousData,
   });

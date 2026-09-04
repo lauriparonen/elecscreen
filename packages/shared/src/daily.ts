@@ -21,11 +21,18 @@ export const dailySortBy = z.enum([
 ]);
 export const dailySortDir = z.enum(['asc', 'desc']);
 
+const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
+
 export const dailyQuery = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
   sortBy: dailySortBy.default('date'),
   sortDir: dailySortDir.default('desc'),
+  dateFrom: isoDate.optional(),
+  dateTo: isoDate.optional(),
+  q: z.string().trim().min(1).max(64).optional(),
 });
 
 export type DailySortBy = z.infer<typeof dailySortBy>;

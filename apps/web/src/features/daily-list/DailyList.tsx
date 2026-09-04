@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { DailySortBy, DailySortDir } from '@repo/shared';
 import { useDaily } from './useDaily.ts';
+import { FilterBar } from './FilterBar.tsx';
 import { formatCoverage, formatKwh, formatPrice } from '../../lib/format.ts';
+import { useDebounced } from '../../lib/useDebounced.ts';
 
 const PAGE_SIZE = 50;
 
@@ -48,8 +50,34 @@ export function DailyList() {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<DailySortBy>('date');
   const [sortDir, setSortDir] = useState<DailySortDir>('desc');
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const debouncedSearch = useDebounced(search, 250);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, dateFrom, dateTo]);
+
+  const hasActiveFilter =
+    debouncedSearch.length > 0 || dateFrom.length > 0 || dateTo.length > 0;
+
+  const clearFilters = () => {
+    setSearch('');
+    setDateFrom('');
+    setDateTo('');
+  };
+
   const { data, isPending, isError, error, refetch, isFetching, isPlaceholderData } =
-    useDaily(page, PAGE_SIZE, sortBy, sortDir);
+    useDaily({
+      page,
+      pageSize: PAGE_SIZE,
+      sortBy,
+      sortDir,
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined,
+      q: debouncedSearch || undefined,
+    });
 
   const toggleSort = (key: DailySortBy) => {
     if (key === sortBy) {
@@ -88,12 +116,27 @@ export function DailyList() {
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
 
-  if (rows.length === 0) {
-    return <p className="py-8 text-center text-sm text-slate-500">No data.</p>;
-  }
-
   return (
     <div className="space-y-3">
+      <FilterBar
+        search={search}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onSearch={setSearch}
+        onDateFrom={setDateFrom}
+        onDateTo={setDateTo}
+        onClear={clearFilters}
+        hasActiveFilter={hasActiveFilter}
+      />
+
+      {rows.length === 0 ? (
+        <p className="rounded-lg border border-slate-200 bg-white py-10 text-center text-sm text-slate-500 shadow-sm">
+          {hasActiveFilter
+            ? 'No days match these filters.'
+            : 'No data.'}
+        </p>
+      ) : (
+        <>
       <div
         className={`overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm transition-opacity ${
           isPlaceholderData ? 'opacity-60' : ''
@@ -206,6 +249,8 @@ export function DailyList() {
           </button>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

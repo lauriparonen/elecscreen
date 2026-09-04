@@ -1,6 +1,12 @@
-import { sql } from 'kysely';
+import { sql, type RawBuilder } from 'kysely';
 import type { DailySortBy, DailySortDir, DailyStatsRow } from '@repo/shared';
 import { db } from '../db/client.ts';
+
+export interface DailyFilters {
+  dateFrom?: string;
+  dateTo?: string;
+  q?: string;
+}
 
 export interface DailyPage {
   rows: DailyStatsRow[];
@@ -15,17 +21,32 @@ const SORT_COLUMN: Record<DailySortBy, string> = {
   longestNegativePriceStreakHours: 'COALESCE(l.len, 0)',
 };
 
+function buildWhere(f: DailyFilters): RawBuilder<unknown> {
+  const parts: RawBuilder<unknown>[] = [];
+  if (f.dateFrom) parts.push(sql`date >= ${f.dateFrom}::date`);
+  if (f.dateTo) parts.push(sql`date <= ${f.dateTo}::date`);
+  if (f.q) parts.push(sql`date::text ILIKE ${'%' + f.q + '%'}`);
+  if (parts.length === 0) return sql`TRUE`;
+  return parts.reduce((acc, p, i) => (i === 0 ? p : sql`${acc} AND ${p}`));
+}
+
 export async function getDailyStats(
   limit: number,
   offset: number,
   sortBy: DailySortBy,
   sortDir: DailySortDir,
+  filters: DailyFilters,
 ): Promise<DailyPage> {
+  const where = buildWhere(filters);
   const sortCol = sql.raw(SORT_COLUMN[sortBy]);
   const dir = sql.raw(sortDir === 'asc' ? 'ASC' : 'DESC');
+
   const [rowsResult, totalResult] = await Promise.all([
     sql<DailyStatsRow>`
-      WITH agg AS (
+      WITH filtered AS (
+        SELECT * FROM electricitydata WHERE ${where}
+      ),
+      agg AS (
         SELECT
           date,
           (SUM(productionamount) * 1000)::float8 AS "productionKwh",
@@ -35,7 +56,7 @@ export async function getDailyStats(
           COUNT(consumptionamount)::int          AS "consumptionHoursReported",
           COUNT(hourlyprice)::int                AS "priceHoursReported",
           COUNT(*)::int                          AS "hoursTotal"
-        FROM electricitydata
+        FROM filtered
         GROUP BY date
       ),
       neg AS (
@@ -46,7 +67,7 @@ export async function getDailyStats(
             - ROW_NUMBER() OVER (
                 PARTITION BY date, ((hourlyprice < 0) IS TRUE) ORDER BY starttime
               ) AS grp
-        FROM electricitydata
+        FROM filtered
       ),
       streaks AS (
         SELECT date, COUNT(*)::int AS len
@@ -75,7 +96,9 @@ export async function getDailyStats(
       LIMIT ${limit} OFFSET ${offset}
     `.execute(db),
     sql<{ total: number }>`
-      SELECT COUNT(DISTINCT date)::int AS total FROM electricitydata
+      SELECT COUNT(DISTINCT date)::int AS total
+      FROM electricitydata
+      WHERE ${where}
     `.execute(db),
   ]);
 

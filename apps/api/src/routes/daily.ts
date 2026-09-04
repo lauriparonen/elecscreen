@@ -14,9 +14,14 @@ export async function registerDailyRoutes(app: FastifyInstance): Promise<void> {
       },
     },
     async (req) => {
-      const { page, pageSize, sortBy, sortDir } = req.query as DailyQuery;
+      const { page, pageSize, sortBy, sortDir, dateFrom, dateTo, q } =
+        req.query as DailyQuery;
       const offset = (page - 1) * pageSize;
-      const { rows, total } = await getDailyStats(pageSize, offset, sortBy, sortDir);
+      const { rows, total } = await getDailyStats(pageSize, offset, sortBy, sortDir, {
+        dateFrom,
+        dateTo,
+        q,
+      });
       return { data: rows, page, pageSize, total };
     },
   );

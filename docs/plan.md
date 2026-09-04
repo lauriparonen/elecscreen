@@ -74,9 +74,9 @@ Goal: table on screen showing real data from the api.
 ## Phase 5 — Optional features (pick as time allows)
 
 - [x] Pagination (server-side with offset)
-- [ ] Column ordering
-- [ ] Date range filter
-- [ ] Search (by date? not much else to search on)
+- [x] Column ordering
+- [x] Date range filter
+- [x] Search (by date? not much else to search on)
 - [ ] Single-day view route
   - [ ] Hour of max consumption, hour of max production, delta
   - [ ] "Cheapest hours" — top N by lowest price, maybe with a threshold input
