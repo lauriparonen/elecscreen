@@ -1,13 +1,65 @@
 import { useState } from 'react';
+import type { DailySortBy, DailySortDir } from '@repo/shared';
 import { useDaily } from './useDaily.ts';
 import { formatCoverage, formatKwh, formatPrice } from '../../lib/format.ts';
 
 const PAGE_SIZE = 50;
 
+type ColumnDef = {
+  key: DailySortBy;
+  label: string;
+  align: 'left' | 'right';
+};
+
+function SortIndicator({ active, dir }: { active: boolean; dir: DailySortDir }) {
+  const upActive = active && dir === 'asc';
+  const downActive = active && dir === 'desc';
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 8 12"
+      className="h-3 w-2 flex-shrink-0"
+    >
+      <path
+        d="M4 0 L8 4 L0 4 Z"
+        className={
+          upActive ? 'fill-slate-900' : 'fill-slate-400 group-hover:fill-slate-500'
+        }
+      />
+      <path
+        d="M4 12 L0 8 L8 8 Z"
+        className={
+          downActive ? 'fill-slate-900' : 'fill-slate-400 group-hover:fill-slate-500'
+        }
+      />
+    </svg>
+  );
+}
+
+const COLUMNS: ColumnDef[] = [
+  { key: 'date', label: 'Date', align: 'left' },
+  { key: 'productionKwh', label: 'Production', align: 'right' },
+  { key: 'consumptionKwh', label: 'Consumption', align: 'right' },
+  { key: 'averagePriceSntKwh', label: 'Avg price', align: 'right' },
+  { key: 'longestNegativePriceStreakHours', label: 'Neg-price streak', align: 'right' },
+];
+
 export function DailyList() {
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<DailySortBy>('date');
+  const [sortDir, setSortDir] = useState<DailySortDir>('desc');
   const { data, isPending, isError, error, refetch, isFetching, isPlaceholderData } =
-    useDaily(page, PAGE_SIZE);
+    useDaily(page, PAGE_SIZE, sortBy, sortDir);
+
+  const toggleSort = (key: DailySortBy) => {
+    if (key === sortBy) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(key);
+      setSortDir(key === 'date' ? 'desc' : 'desc');
+    }
+    setPage(1);
+  };
 
   if (isPending) {
     return <p className="py-8 text-center text-sm text-slate-500">Loading…</p>;
@@ -50,11 +102,33 @@ export function DailyList() {
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-600">
             <tr>
-              <th className="px-4 py-3 font-medium">Date</th>
-              <th className="px-4 py-3 font-medium text-right">Production</th>
-              <th className="px-4 py-3 font-medium text-right">Consumption</th>
-              <th className="px-4 py-3 font-medium text-right">Avg price</th>
-              <th className="px-4 py-3 font-medium text-right">Neg-price streak</th>
+              {COLUMNS.map((col) => {
+                const active = col.key === sortBy;
+                const ariaSort: 'ascending' | 'descending' | 'none' = active
+                  ? sortDir === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none';
+                return (
+                  <th
+                    key={col.key}
+                    aria-sort={ariaSort}
+                    scope="col"
+                    className="p-0"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleSort(col.key)}
+                      className={`group flex w-full items-center gap-1.5 px-4 py-3 font-medium uppercase tracking-wide transition-colors duration-150 ease-out select-none hover:bg-slate-200/70 active:scale-[0.98] ${
+                        col.align === 'right' ? 'justify-end' : 'justify-start'
+                      } ${active ? 'text-slate-900 bg-slate-200/60' : 'text-slate-600'}`}
+                    >
+                      <span>{col.label}</span>
+                      <SortIndicator active={active} dir={sortDir} />
+                    </button>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

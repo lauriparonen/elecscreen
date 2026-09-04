@@ -1,5 +1,5 @@
 import { sql } from 'kysely';
-import type { DailyStatsRow } from '@repo/shared';
+import type { DailySortBy, DailySortDir, DailyStatsRow } from '@repo/shared';
 import { db } from '../db/client.ts';
 
 export interface DailyPage {
@@ -7,10 +7,22 @@ export interface DailyPage {
   total: number;
 }
 
+const SORT_COLUMN: Record<DailySortBy, string> = {
+  date: 'a.date',
+  productionKwh: 'a."productionKwh"',
+  consumptionKwh: 'a."consumptionKwh"',
+  averagePriceSntKwh: 'a."averagePriceSntKwh"',
+  longestNegativePriceStreakHours: 'COALESCE(l.len, 0)',
+};
+
 export async function getDailyStats(
   limit: number,
   offset: number,
+  sortBy: DailySortBy,
+  sortDir: DailySortDir,
 ): Promise<DailyPage> {
+  const sortCol = sql.raw(SORT_COLUMN[sortBy]);
+  const dir = sql.raw(sortDir === 'asc' ? 'ASC' : 'DESC');
   const [rowsResult, totalResult] = await Promise.all([
     sql<DailyStatsRow>`
       WITH agg AS (
@@ -59,7 +71,7 @@ export async function getDailyStats(
         COALESCE(l.len, 0) AS "longestNegativePriceStreakHours"
       FROM agg a
       LEFT JOIN longest l USING (date)
-      ORDER BY a.date DESC
+      ORDER BY ${sortCol} ${dir} NULLS LAST, a.date DESC
       LIMIT ${limit} OFFSET ${offset}
     `.execute(db),
     sql<{ total: number }>`

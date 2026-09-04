@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { dailyQuery, dailyResponse } from '@repo/shared';
+import { dailyQuery, dailyResponse, type DailyQuery } from '@repo/shared';
 import { getDailyStats } from '../queries/daily.ts';
 
 export async function registerDailyRoutes(app: FastifyInstance): Promise<void> {
@@ -14,9 +14,9 @@ export async function registerDailyRoutes(app: FastifyInstance): Promise<void> {
       },
     },
     async (req) => {
-      const { page, pageSize } = req.query as { page: number; pageSize: number };
+      const { page, pageSize, sortBy, sortDir } = req.query as DailyQuery;
       const offset = (page - 1) * pageSize;
-      const { rows, total } = await getDailyStats(pageSize, offset);
+      const { rows, total } = await getDailyStats(pageSize, offset, sortBy, sortDir);
       return { data: rows, page, pageSize, total };
     },
   );
