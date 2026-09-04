@@ -64,16 +64,16 @@ Goal: table on screen showing real data from the api.
 
 ## Phase 4 — Required feature complete
 
-- [ ] Daily list shows: date, total consumption (kWh), total production (kWh), avg price (snt/kWh), longest negative-price streak (hours)
-- [ ] Nulls / partial-coverage days handled visibly (not silently dropped, not shown as 0)
-- [ ] Empty state, loading state, error state
-- [ ] README first pass — how to run, what's implemented, AI disclosure
+- [x] Daily list shows: date, total consumption (kWh), total production (kWh), avg price (snt/kWh), longest negative-price streak (hours)
+- [x] Nulls / partial-coverage days handled visibly (not silently dropped, not shown as 0)
+- [x] Empty state, loading state, error state
+- [] README first pass — how to run, what's implemented, AI disclosure
 
 **Checkpoint: this is the minimum viable submission. Everything below is optional/bonus.**
 
 ## Phase 5 — Optional features (pick as time allows)
 
-- [ ] Pagination (server-side, cursor or offset — offset is fine for this)
+- [x] Pagination (server-side with offset)
 - [ ] Column ordering
 - [ ] Date range filter
 - [ ] Search (by date? not much else to search on)

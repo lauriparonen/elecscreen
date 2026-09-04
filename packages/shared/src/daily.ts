@@ -12,9 +12,18 @@ export const dailyStatsRow = z.object({
   longestNegativePriceStreakHours: z.number().int(),
 });
 
+export const dailyQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(200).default(50),
+});
+
 export const dailyResponse = z.object({
   data: z.array(dailyStatsRow),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  total: z.number().int(),
 });
 
 export type DailyStatsRow = z.infer<typeof dailyStatsRow>;
+export type DailyQuery = z.infer<typeof dailyQuery>;
 export type DailyResponse = z.infer<typeof dailyResponse>;
