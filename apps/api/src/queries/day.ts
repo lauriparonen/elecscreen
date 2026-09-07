@@ -30,20 +30,12 @@ interface PeakRow {
   valueKwh: number;
 }
 
-interface CheapestRow {
-  hour: number;
-  priceSntKwh: number;
-}
-
 interface StreakRow {
   len: number;
 }
 
-export async function getDayStats(
-  date: string,
-  cheapestN: number,
-): Promise<DayResult | null> {
-  const [hoursResult, aggResult, peakProdResult, peakConsResult, cheapestResult, streakResult] =
+export async function getDayStats(date: string): Promise<DayResult | null> {
+  const [hoursResult, aggResult, peakProdResult, peakConsResult, streakResult] =
     await Promise.all([
       sql<HourRow>`
         SELECT
@@ -86,15 +78,6 @@ export async function getDayStats(
         ORDER BY consumptionamount DESC, starttime
         LIMIT 1
       `.execute(db),
-      sql<CheapestRow>`
-        SELECT
-          EXTRACT(HOUR FROM starttime)::int       AS hour,
-          hourlyprice::float8                     AS "priceSntKwh"
-        FROM electricitydata
-        WHERE date = ${date}::date AND hourlyprice IS NOT NULL
-        ORDER BY hourlyprice ASC, starttime
-        LIMIT ${cheapestN}
-      `.execute(db),
       sql<StreakRow>`
         WITH neg AS (
           SELECT
@@ -135,7 +118,6 @@ export async function getDayStats(
       peakConsumption: peakCons,
       peakProduction: peakProd,
       hoursBetweenPeaks,
-      cheapestHours: cheapestResult.rows,
     },
   };
 }

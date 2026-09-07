@@ -94,7 +94,6 @@ Routes:
 API: `GET /api/day/:date`
 
 - 404 if no rows for that date.
-- Query param: `?cheapestN=` (int 1..24, default 3).
 - Response shape:
   ```ts
   {
@@ -107,11 +106,11 @@ API: `GET /api/day/:date`
       peakConsumption: { hour, valueKwh } | null,
       peakProduction:  { hour, valueKwh } | null,
       hoursBetweenPeaks: number | null,
-      cheapestHours: Array<{ hour, priceSntKwh }>,
     }
   }
   ```
-- Peaks + cheapest computed in SQL. Nulls handled per metric.
+- Peaks computed in SQL. Nulls handled per metric.
+- Cheapest N hours are **computed client-side** from `hours`, not served. The client already has all 24 hours in memory to render the chart, so an extra `?cheapestN=` query param would just cause a refetch every time the user changes N with no new information gained. The stepper stays as a UI-only filter driven by the URL search param.
 
 KPI header: 4 cards — totals × 3 + peaks-delta card ("Consumption peaked at 08:00, production at 13:00 — 5h apart").
 
