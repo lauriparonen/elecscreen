@@ -79,9 +79,51 @@ Goal: table on screen showing real data from the api.
 - [x] Search (by date? not much else to search on)
 - [ ] Single-day view route
   - [ ] Hour of max consumption, hour of max production, delta
-  - [ ] "Cheapest hours" — top N by lowest price, maybe with a threshold input
-  - [ ] Recharts line chart: consumption + production + price on shared time axis
-    - Twin y-axes needed (kWh vs snt/kWh). Design decision: one chart with 2 axes, or stacked small multiples? Small multiples usually read better but take more space.
+  - [ ] "Cheapest hours" — top N by lowest price, configurable (stepper on the view)
+  - [ ] Recharts: **stacked small multiples**, not twin axes (twin kWh/snt-kWh routinely mislead). Three panels — production (area), consumption (area), price (line + zero reference + negative-region shade + cheapest-hour dots). Shared x-axis + `syncId` so tooltips align.
+
+### Phase 5b plan — single day view
+
+Router: TanStack Router (code-based, not file-based — only 2 routes). Stay in the TanStack family since we're already using Query; its typed search-param story is what we need for URL-syncing list state.
+
+Routes:
+
+- `/` — daily list. Search schema mirrors `dailyQuery` (page, pageSize, sortBy, sortDir, dateFrom, dateTo, q). List state moves from `useState` into URL — enables shareable list URLs and back-button restoration from the day view.
+- `/day/$date` — single-day view. Search schema: `cheapestN` (1..24, default 3).
+
+API: `GET /api/day/:date`
+
+- 404 if no rows for that date.
+- Query param: `?cheapestN=` (int 1..24, default 3).
+- Response shape:
+  ```ts
+  {
+    date: string,
+    hours: Array<{ hour, starttime, productionKwh, consumptionKwh, priceSntKwh }>,
+    summary: {
+      productionKwh, consumptionKwh, averagePriceSntKwh,
+      productionHoursReported, consumptionHoursReported, priceHoursReported, hoursTotal,
+      longestNegativePriceStreakHours,
+      peakConsumption: { hour, valueKwh } | null,
+      peakProduction:  { hour, valueKwh } | null,
+      hoursBetweenPeaks: number | null,
+      cheapestHours: Array<{ hour, priceSntKwh }>,
+    }
+  }
+  ```
+- Peaks + cheapest computed in SQL. Nulls handled per metric.
+
+KPI header: 4 cards — totals × 3 + peaks-delta card ("Consumption peaked at 08:00, production at 13:00 — 5h apart").
+
+Packages: `@tanstack/react-router`, `recharts`.
+
+Order of work:
+
+1. TanStack Router setup + list state → URL search params (single commit — touching the list route already)
+2. Backend `/api/day/:date` + shared schema
+3. Day view shell: fetch hook, KPI cards, coverage badges
+4. Charts (small multiples)
+5. Cheapest-N stepper wired to URL
 
 ## Phase 6 — Bonuses (pick as time allows)
 
