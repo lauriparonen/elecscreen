@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import type { DailySortBy, DailySortDir } from '@repo/shared';
 import { useDaily } from './useDaily.ts';
 import { FilterBar } from './FilterBar.tsx';
 import { formatCoverage, formatKwh, formatPrice } from '../../lib/format.ts';
 import { useDebounced } from '../../lib/useDebounced.ts';
-
-const PAGE_SIZE = 50;
+import { indexRoute } from '../../router.tsx';
 
 type ColumnDef = {
   key: DailySortBy;
@@ -47,46 +47,65 @@ const COLUMNS: ColumnDef[] = [
 ];
 
 export function DailyList() {
-  const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState<DailySortBy>('date');
-  const [sortDir, setSortDir] = useState<DailySortDir>('desc');
-  const [search, setSearch] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const debouncedSearch = useDebounced(search, 250);
+  const search = indexRoute.useSearch();
+  const navigate = indexRoute.useNavigate();
+  const { page, pageSize, sortBy, sortDir, dateFrom, dateTo, q } = search;
+
+  const [searchInput, setSearchInput] = useState(q ?? '');
+  const debouncedSearch = useDebounced(searchInput, 250);
 
   useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, dateFrom, dateTo]);
+    setSearchInput(q ?? '');
+  }, [q]);
 
-  const hasActiveFilter =
-    debouncedSearch.length > 0 || dateFrom.length > 0 || dateTo.length > 0;
+  useEffect(() => {
+    const next = debouncedSearch.length > 0 ? debouncedSearch : undefined;
+    if (next !== q) {
+      navigate({ search: { ...search, q: next, page: 1 } });
+    }
+  }, [debouncedSearch, q, navigate, search]);
+
+  const hasActiveFilter = Boolean(q || dateFrom || dateTo);
 
   const clearFilters = () => {
-    setSearch('');
-    setDateFrom('');
-    setDateTo('');
+    setSearchInput('');
+    navigate({
+      search: {
+        ...search,
+        q: undefined,
+        dateFrom: undefined,
+        dateTo: undefined,
+        page: 1,
+      },
+    });
+  };
+
+  const setDateFrom = (v: string) => {
+    navigate({ search: { ...search, dateFrom: v || undefined, page: 1 } });
+  };
+  const setDateTo = (v: string) => {
+    navigate({ search: { ...search, dateTo: v || undefined, page: 1 } });
+  };
+  const setPage = (updater: number | ((p: number) => number)) => {
+    const nextPage = typeof updater === 'function' ? updater(page) : updater;
+    navigate({ search: { ...search, page: nextPage } });
   };
 
   const { data, isPending, isError, error, refetch, isFetching, isPlaceholderData } =
     useDaily({
       page,
-      pageSize: PAGE_SIZE,
+      pageSize,
       sortBy,
       sortDir,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
-      q: debouncedSearch || undefined,
+      q: q || undefined,
     });
 
   const toggleSort = (key: DailySortBy) => {
-    if (key === sortBy) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortBy(key);
-      setSortDir(key === 'date' ? 'desc' : 'desc');
-    }
-    setPage(1);
+    const nextDir: DailySortDir =
+      key === sortBy ? (sortDir === 'asc' ? 'desc' : 'asc') : 'desc';
+    navigate({ search: { ...search, sortBy: key, sortDir: nextDir, page: 1 } });
   };
 
   if (isPending) {
@@ -111,7 +130,7 @@ export function DailyList() {
     );
   }
 
-  const { data: rows, total, pageSize } = data;
+  const { data: rows, total } = data;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
@@ -119,10 +138,10 @@ export function DailyList() {
   return (
     <div className="space-y-3">
       <FilterBar
-        search={search}
-        dateFrom={dateFrom}
-        dateTo={dateTo}
-        onSearch={setSearch}
+        search={searchInput}
+        dateFrom={dateFrom ?? ''}
+        dateTo={dateTo ?? ''}
+        onSearch={setSearchInput}
         onDateFrom={setDateFrom}
         onDateTo={setDateTo}
         onClear={clearFilters}
@@ -177,7 +196,16 @@ export function DailyList() {
           <tbody className="divide-y divide-slate-100">
             {rows.map((row) => (
               <tr key={row.date} className="hover:bg-slate-50">
-                <td className="px-4 py-2 font-mono text-slate-700">{row.date}</td>
+                <td className="px-4 py-2 font-mono">
+                  <Link
+                    to="/day/$date"
+                    params={{ date: row.date }}
+                    search={{ cheapestN: 3 }}
+                    className="text-slate-700 hover:text-slate-900 hover:underline"
+                  >
+                    {row.date}
+                  </Link>
+                </td>
                 <td className="px-4 py-2 text-right">
                   <div>{formatKwh(row.productionKwh)}</div>
                   <div className="text-xs text-slate-400">

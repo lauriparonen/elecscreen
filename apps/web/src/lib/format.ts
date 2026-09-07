@@ -17,3 +17,7 @@ export function formatPrice(value: number | null): string {
 export function formatCoverage(reported: number, total: number): string {
   return `${reported}/${total} h`;
 }
+
+export function formatHour(hour: number): string {
+  return `${String(hour).padStart(2, '0')}:00`;
+}

@@ -6,6 +6,7 @@ import {
 } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { registerDailyRoutes } from './routes/daily.ts';
+import { registerDayRoutes } from './routes/day.ts';
 
 export function build(): FastifyInstance {
   const app = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
@@ -26,6 +27,7 @@ export function build(): FastifyInstance {
   );
 
   void registerDailyRoutes(app);
+  void registerDayRoutes(app);
 
   return app;
 }
