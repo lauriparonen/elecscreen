@@ -10,10 +10,7 @@ export function RootLayout({ children }: RootLayoutProps) {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-5">
-          <Link
-            to="/"
-            className="text-xl font-semibold text-slate-900 hover:text-slate-700"
-          >
+          <Link to="/" className="text-xl font-semibold text-slate-900 hover:text-slate-700">
             Electricity — daily statistics
           </Link>
           <p className="text-sm text-slate-500">

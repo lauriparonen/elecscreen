@@ -128,15 +128,26 @@ Order of work:
 
 - [ ] Dockerfile for api, wire into docker-compose (or a second compose file)
 - [ ] Cloud deploy — fly.io or railway are lowest-effort for a fastify + pg app
-- [ ] Playwright: at minimum, "the daily list renders and has more than 0 rows"
+- [x] Playwright: 33 tests across the API contract, the daily list, and the day view
+
+### Phase 6 notes — E2E
+
+- `e2e/` workspace, Playwright + chromium. `pnpm test:e2e` from the root; see [e2e/README.md](../e2e/README.md).
+- Runs against the real stack (provided db container + fastify + vite). Playwright's `webServer` starts the api and web dev servers and reuses them if already up.
+- Vite **dev**, not `preview`: the `/api` proxy is configured under `server.proxy`, which `vite preview` ignores.
+- The suite imports the `@repo/shared` zod schemas and parses every API response through them, so each assertion doubles as a contract check. Playwright transpiles the workspace `.ts` source fine because pnpm's symlink resolves to a real path outside `node_modules`.
+- Selectors are role/label-first; `data-testid` was added only where the DOM is ambiguous (`daily-row`, `pagination-range`, `stat-*`, `cheapest-hour`, `hourly-row`).
+- Two bugs/wrong assumptions the suite caught immediately — see the decisions log below.
 
 ## Open questions / to decide
 
-- [ ] Testing on the backend: vitest for the query fns? Worth it for the gaps-and-islands one specifically.
+- [x] Testing on the backend: vitest for the query fns? — skipped. The e2e suite hits `/api/daily` and `/api/day/:date` against the real container and recomputes the gaps-and-islands streak in JS to compare, which covers the case that motivated the question without a second test stack.
 
 ## Decisions log
 
 <!-- append decisions as they're made, dated -->
 
 - YYYY-MM-DD: chose X over Y because ...
+- 2026-09-07: **Correction to the DST note below.** The e2e suite asserted "every day has 24 rows" and failed. The seed data actually has **23 rows on spring-forward days** (2021-03-28, 2022-03-27, 2023-03-26, 2024-03-31 — local 03:00 is absent) and 24 on autumn days (the repeated hour is not duplicated in the source). So the UTC-day grouping does _not_ make hour counts uniform, and CLAUDE.md gotcha #3 is real, not theoretical. The app was already correct — it groups by `date` and reports `hoursTotal` per day rather than assuming 24 — but the reasoning recorded on 2026-09-03 was wrong. Locked in by `api.spec.ts` › "DST days are not 24 hours long" and `day-view.spec.ts` › "a DST day renders its real hour count".
+- 2026-09-07: Fixed a search-filter race the e2e suite found: clicking **Clear** while the search box had text re-applied the search ~250ms later. The debounce effect depended on `q`, so removing `q` from the URL re-ran it with the stale debounced value and pushed the old search straight back. Now a `lastSyncedQ` ref records the value the debounce loop last agreed with the URL on, and the effect no longer fights explicit navigation. Covered by `daily-list.spec.ts` › "search narrows the list and Clear restores it".
 - 2026-09-03: `/api/daily` groups by the stored `date` column as-is (UTC-derived). Rationale: data is from Fingrid + porssisahko, and porssisahko's public docs state they deliberately key on ISO-8601 UTC "koska kesäajan alkaessa ja päättyessä ei tapahdu erikoistapausta kuten paikallisessa ajassa tapahtuu". Trusting the source's own UTC day boundary keeps hour counts consistent across DST. Document in the README.

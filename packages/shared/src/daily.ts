@@ -21,9 +21,7 @@ export const dailySortBy = z.enum([
 ]);
 export const dailySortDir = z.enum(['asc', 'desc']);
 
-const isoDate = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
 
 export const dailyQuery = z.object({
   page: z.coerce.number().int().min(1).default(1),

@@ -5,7 +5,10 @@
   "packageManager": "pnpm@10.12.4",
   "scripts": {
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r typecheck",
+    "test:e2e": "pnpm --filter @repo/e2e test",
+    "test:e2e:ui": "pnpm --filter @repo/e2e test:ui"
   },
   "devDependencies": {
     "prettier": "^3.9.6",

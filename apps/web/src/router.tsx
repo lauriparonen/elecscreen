@@ -1,9 +1,4 @@
-import {
-  createRootRoute,
-  createRoute,
-  createRouter,
-  Outlet,
-} from '@tanstack/react-router';
+import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router';
 import { z } from 'zod';
 import { dailySortBy, dailySortDir } from '@repo/shared';
 import { RootLayout } from './routes/RootLayout.tsx';
@@ -57,7 +52,10 @@ export const dayRoute = createRoute({
   component: DayView,
   validateSearch: daySearchSchema,
   parseParams: (raw) => ({
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).parse(raw.date),
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .parse(raw.date),
   }),
 });
 

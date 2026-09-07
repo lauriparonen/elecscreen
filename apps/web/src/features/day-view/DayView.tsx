@@ -35,13 +35,11 @@ export function DayView() {
 
       <h2 className="text-lg font-semibold font-mono">{date}</h2>
 
-      {isPending && (
-        <p className="py-8 text-center text-sm text-slate-500">Loading…</p>
-      )}
+      {isPending && <p className="py-8 text-center text-sm text-slate-500">Loading…</p>}
 
       {isError && (
         <div className="flex flex-col items-center gap-3 py-8 text-sm">
-          <p className="text-red-600">
+          <p data-testid="day-error" className="text-red-600">
             Failed to load: {error instanceof Error ? error.message : String(error)}
           </p>
           <button
@@ -59,6 +57,7 @@ export function DayView() {
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <StatCard
+              testId="stat-production"
               label="Production"
               value={formatKwh(data.summary.productionKwh)}
               sublabel={formatCoverage(
@@ -67,6 +66,7 @@ export function DayView() {
               )}
             />
             <StatCard
+              testId="stat-consumption"
               label="Consumption"
               value={formatKwh(data.summary.consumptionKwh)}
               sublabel={formatCoverage(
@@ -75,14 +75,13 @@ export function DayView() {
               )}
             />
             <StatCard
+              testId="stat-price"
               label="Avg price"
               value={formatPrice(data.summary.averagePriceSntKwh)}
-              sublabel={formatCoverage(
-                data.summary.priceHoursReported,
-                data.summary.hoursTotal,
-              )}
+              sublabel={formatCoverage(data.summary.priceHoursReported, data.summary.hoursTotal)}
             />
             <StatCard
+              testId="stat-peaks"
               label="Peaks"
               value={
                 data.summary.peakProduction && data.summary.peakConsumption
@@ -97,10 +96,7 @@ export function DayView() {
             />
           </div>
 
-          <DayCharts
-            hours={data.hours}
-            cheapestHours={cheapestHours.map((h) => h.hour)}
-          />
+          <DayCharts hours={data.hours} cheapestHours={cheapestHours.map((h) => h.hour)} />
 
           <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
@@ -110,6 +106,8 @@ export function DayView() {
               <label className="flex items-center gap-2 text-xs text-slate-500">
                 <span>Show</span>
                 <select
+                  data-testid="cheapest-n"
+                  aria-label="Number of cheapest hours to show"
                   value={cheapestN}
                   onChange={(e) => setCheapestN(Number(e.target.value))}
                   className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 shadow-sm outline-none transition-colors duration-150 ease-out focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
@@ -125,10 +123,11 @@ export function DayView() {
             {cheapestHours.length === 0 ? (
               <p className="text-sm text-slate-400">No price data.</p>
             ) : (
-              <ul className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              <ul data-testid="cheapest-hours" className="grid grid-cols-2 gap-2 md:grid-cols-4">
                 {cheapestHours.map((h) => (
                   <li
                     key={h.hour}
+                    data-testid="cheapest-hour"
                     className="flex items-baseline justify-between rounded-md border border-slate-200 px-3 py-2 text-sm"
                   >
                     <span className="font-mono text-slate-700">{formatHour(h.hour)}</span>
@@ -145,7 +144,7 @@ export function DayView() {
             <summary className="cursor-pointer text-xs uppercase tracking-wide text-slate-500">
               Hourly data ({data.hours.length} rows)
             </summary>
-            <table className="mt-3 w-full text-sm">
+            <table data-testid="hourly-table" className="mt-3 w-full text-sm">
               <thead className="text-left text-xs uppercase text-slate-500">
                 <tr>
                   <th className="py-1 pr-4">Hour</th>
@@ -156,7 +155,11 @@ export function DayView() {
               </thead>
               <tbody>
                 {data.hours.map((h) => (
-                  <tr key={h.starttime} className="border-t border-slate-100">
+                  <tr
+                    key={h.starttime}
+                    data-testid="hourly-row"
+                    className="border-t border-slate-100"
+                  >
                     <td className="py-1 pr-4 font-mono">{formatHour(h.hour)}</td>
                     <td className="py-1 pr-4 text-right tabular-nums">
                       {formatKwh(h.productionKwh)}
@@ -164,9 +167,7 @@ export function DayView() {
                     <td className="py-1 pr-4 text-right tabular-nums">
                       {formatKwh(h.consumptionKwh)}
                     </td>
-                    <td className="py-1 text-right tabular-nums">
-                      {formatPrice(h.priceSntKwh)}
-                    </td>
+                    <td className="py-1 text-right tabular-nums">{formatPrice(h.priceSntKwh)}</td>
                   </tr>
                 ))}
               </tbody>

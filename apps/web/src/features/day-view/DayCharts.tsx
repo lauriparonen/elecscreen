@@ -33,10 +33,7 @@ function AreaPanel({ title, dataKey, color, empty, hours }: PanelProps) {
       <h3 className="mb-1 text-xs uppercase tracking-wide text-slate-500">{title}</h3>
       {hasData ? (
         <ResponsiveContainer width="100%" height={180}>
-          <AreaChart
-            data={hours}
-            margin={{ top: 8, right: 12, bottom: 4, left: 4 }}
-          >
+          <AreaChart data={hours} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
             <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="hour"
@@ -69,29 +66,16 @@ function AreaPanel({ title, dataKey, color, empty, hours }: PanelProps) {
   );
 }
 
-function PricePanel({
-  hours,
-  cheapestHours,
-}: {
-  hours: DayHour[];
-  cheapestHours: number[];
-}) {
+function PricePanel({ hours, cheapestHours }: { hours: DayHour[]; cheapestHours: number[] }) {
   const hasData = hours.some((h) => h.priceSntKwh !== null);
-  const hasNegative = hours.some(
-    (h) => h.priceSntKwh !== null && h.priceSntKwh < 0,
-  );
+  const hasNegative = hours.some((h) => h.priceSntKwh !== null && h.priceSntKwh < 0);
   const cheapestSet = new Set(cheapestHours);
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-      <h3 className="mb-1 text-xs uppercase tracking-wide text-slate-500">
-        Spot price
-      </h3>
+      <h3 className="mb-1 text-xs uppercase tracking-wide text-slate-500">Spot price</h3>
       {hasData ? (
         <ResponsiveContainer width="100%" height={180}>
-          <LineChart
-            data={hours}
-            margin={{ top: 8, right: 12, bottom: 4, left: 4 }}
-          >
+          <LineChart data={hours} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
             <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="hour"
@@ -126,11 +110,7 @@ function PricePanel({
               dot={(props) => {
                 const { cx, cy, payload, index } = props;
                 const key = `dot-${index}`;
-                if (
-                  cx === undefined ||
-                  cy === undefined ||
-                  payload?.priceSntKwh === null
-                ) {
+                if (cx === undefined || cy === undefined || payload?.priceSntKwh === null) {
                   return <g key={key} />;
                 }
                 const isCheapest = cheapestSet.has(payload.hour);
@@ -152,9 +132,7 @@ function PricePanel({
           </LineChart>
         </ResponsiveContainer>
       ) : (
-        <p className="py-8 text-center text-sm text-slate-400">
-          No price reported this day.
-        </p>
+        <p className="py-8 text-center text-sm text-slate-400">No price reported this day.</p>
       )}
     </div>
   );

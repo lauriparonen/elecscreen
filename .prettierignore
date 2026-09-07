@@ -6,3 +6,5 @@ coverage
 pnpm-lock.yaml
 init-db.tar.gz
 *.png
+playwright-report
+test-results

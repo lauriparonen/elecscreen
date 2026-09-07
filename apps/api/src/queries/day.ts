@@ -35,9 +35,8 @@ interface StreakRow {
 }
 
 export async function getDayStats(date: string): Promise<DayResult | null> {
-  const [hoursResult, aggResult, peakProdResult, peakConsResult, streakResult] =
-    await Promise.all([
-      sql<HourRow>`
+  const [hoursResult, aggResult, peakProdResult, peakConsResult, streakResult] = await Promise.all([
+    sql<HourRow>`
         SELECT
           EXTRACT(HOUR FROM starttime)::int         AS hour,
           starttime::text                            AS starttime,
@@ -48,7 +47,7 @@ export async function getDayStats(date: string): Promise<DayResult | null> {
         WHERE date = ${date}::date
         ORDER BY starttime
       `.execute(db),
-      sql<AggRow>`
+    sql<AggRow>`
         SELECT
           (SUM(productionamount) * 1000)::float8 AS "productionKwh",
           SUM(consumptionamount)::float8         AS "consumptionKwh",
@@ -60,7 +59,7 @@ export async function getDayStats(date: string): Promise<DayResult | null> {
         FROM electricitydata
         WHERE date = ${date}::date
       `.execute(db),
-      sql<PeakRow>`
+    sql<PeakRow>`
         SELECT
           EXTRACT(HOUR FROM starttime)::int       AS hour,
           (productionamount * 1000)::float8       AS "valueKwh"
@@ -69,7 +68,7 @@ export async function getDayStats(date: string): Promise<DayResult | null> {
         ORDER BY productionamount DESC, starttime
         LIMIT 1
       `.execute(db),
-      sql<PeakRow>`
+    sql<PeakRow>`
         SELECT
           EXTRACT(HOUR FROM starttime)::int       AS hour,
           consumptionamount::float8               AS "valueKwh"
@@ -78,7 +77,7 @@ export async function getDayStats(date: string): Promise<DayResult | null> {
         ORDER BY consumptionamount DESC, starttime
         LIMIT 1
       `.execute(db),
-      sql<StreakRow>`
+    sql<StreakRow>`
         WITH neg AS (
           SELECT
             starttime,
@@ -98,7 +97,7 @@ export async function getDayStats(date: string): Promise<DayResult | null> {
         )
         SELECT COALESCE(MAX(len), 0)::int AS len FROM streaks
       `.execute(db),
-    ]);
+  ]);
 
   if (hoursResult.rows.length === 0) return null;
 
@@ -107,8 +106,7 @@ export async function getDayStats(date: string): Promise<DayResult | null> {
   const peakCons = peakConsResult.rows[0] ?? null;
   const streakLen = streakResult.rows[0]?.len ?? 0;
 
-  const hoursBetweenPeaks =
-    peakProd && peakCons ? Math.abs(peakProd.hour - peakCons.hour) : null;
+  const hoursBetweenPeaks = peakProd && peakCons ? Math.abs(peakProd.hour - peakCons.hour) : null;
 
   return {
     hours: hoursResult.rows,
