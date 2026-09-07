@@ -77,10 +77,10 @@ Goal: table on screen showing real data from the api.
 - [x] Column ordering
 - [x] Date range filter
 - [x] Search (by date? not much else to search on)
-- [ ] Single-day view route
-  - [ ] Hour of max consumption, hour of max production, delta
-  - [ ] "Cheapest hours" — top N by lowest price, configurable (stepper on the view)
-  - [ ] Recharts: **stacked small multiples**, not twin axes (twin kWh/snt-kWh routinely mislead). Three panels — production (area), consumption (area), price (line + zero reference + negative-region shade + cheapest-hour dots). Shared x-axis + `syncId` so tooltips align.
+- [x] Single-day view route
+  - [x] Hour of max consumption, hour of max production, delta
+  - [x] "Cheapest hours" — top N by lowest price, configurable (stepper on the view)
+  - [x] Recharts: **stacked small multiples**, not twin axes (twin kWh/snt-kWh routinely mislead). Three panels — production (area), consumption (area), price (line + zero reference + negative-region shade + cheapest-hour dots). Shared x-axis + `syncId` so tooltips align.
 
 ### Phase 5b plan — single day view
 
@@ -132,7 +132,6 @@ Order of work:
 
 ## Open questions / to decide
 
-- [ ] Frontend router: needed only if we build the single-day view. Tanstack Router vs React Router — probably React Router bc it's the boring default and this project doesn't need anything fancy.
 - [ ] Testing on the backend: vitest for the query fns? Worth it for the gaps-and-islands one specifically.
 
 ## Decisions log
