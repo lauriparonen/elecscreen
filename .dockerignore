@@ -1,0 +1,18 @@
+# Shared by both image builds in this repo: the provided database image
+# (root Dockerfile) and the API image (apps/api/Dockerfile).
+#
+# Do NOT ignore init-db.tar.gz — the provided db image ADDs it.
+
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+
+.git
+.gitignore
+*.log
+
+e2e/playwright-report
+e2e/test-results
+**/*.tsbuildinfo

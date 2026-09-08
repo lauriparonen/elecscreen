@@ -1,0 +1,33 @@
+# Overlay that adds the API container to the provided database stack.
+# The upstream docker-compose.yml is not modified; the two are merged at runtime:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --build
+#
+services:
+  db:
+    # The only thing added to the provided service: a readiness probe, so the
+    # API waits for the seed to finish instead of racing it on a cold start.
+    healthcheck:
+      # -h 127.0.0.1 matters: while the seed scripts run, the entrypoint has a
+      # temporary server up on the unix socket only, so a socket-based probe
+      # reports ready minutes before the data actually exists. TCP does not
+      # listen until init finishes.
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U academy -d electricity']
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://academy:academy@db:5432/electricity
+      PORT: 3000
+    ports:
+      - 3000:3000
+    depends_on:
+      db:
+        condition: service_healthy
