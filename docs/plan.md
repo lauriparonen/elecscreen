@@ -126,9 +126,36 @@ Order of work:
 
 ## Phase 6 — Bonuses (pick as time allows)
 
-- [ ] Dockerfile for api, wire into docker-compose (or a second compose file)
+- [x] Dockerfile for api, wired in via `docker-compose.app.yml` (overlay; upstream compose untouched)
 - [ ] Cloud deploy — fly.io or railway are lowest-effort for a fastify + pg app
 - [x] Playwright: 33 tests across the API contract, the daily list, and the day view
+
+### Phase 6 notes — API container
+
+- **`pnpm --filter @repo/api start` was broken before this and nobody had noticed.** `tsc`
+  emitted a `dist/` whose imports of `@repo/shared` resolve to `packages/shared/src/index.ts`;
+  Node 20 can't load `.ts`, so the built server died at boot with `ERR_UNKNOWN_FILE_EXTENSION`.
+  Only the tsx dev path had ever been exercised.
+- Fix: build with **esbuild** ([apps/api/build.js](../apps/api/build.js)) instead of tsc.
+  Bundles the shared schemas _and_ the runtime deps into one self-contained ESM file.
+  Considered and rejected: giving `packages/shared` its own build + conditional `exports`
+  (three consumers — api, web, e2e — all currently resolve the TS source with zero build
+  step, and breaking that to serve the container is the tail wagging the dog).
+- esbuild needs a `createRequire` banner for ESM output: fastify (via avvio) and pg are
+  CommonJS and call `require()` internally. Without it: `Dynamic require of "node:events"
+is not supported`.
+- Image: two stages, runtime is `node:24-alpine` + a single `index.js`, no node_modules,
+  non-root `node` user, `/health` healthcheck. 238 MB, essentially all base image.
+- Builder copies **every** workspace `package.json`, not just the api's — pnpm matches them
+  against the lockfile's importers and `--frozen-lockfile` fails if any is missing.
+  `tsconfig.base.json` is copied too, else esbuild warns it can't resolve the `extends`.
+- Root `.dockerignore` added; it deliberately does **not** exclude `init-db.tar.gz`, since
+  the provided db image `ADD`s it and shares the same build context.
+- Verified: image builds clean, container on the compose network serves `/health`,
+  `/api/daily`, `/api/day/:date`, 404 and 400 paths against the real db, and reports
+  `(healthy)`. Full `docker compose up` of the api service wasn't run end-to-end because a
+  local dev server was holding port 3000; the container was exercised via `docker run` on
+  the same network with the same env instead.
 
 ### Phase 6 notes — E2E
 
