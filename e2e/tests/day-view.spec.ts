@@ -38,7 +38,7 @@ test.describe('single day view', () => {
       Math.round(api.summary.consumptionKwh!),
     );
     expect(parseMetric(await page.getByTestId('stat-price-value').innerText())).toBe(
-      Number(api.summary.averagePriceSntKwh!.toFixed(2)),
+      Number(api.summary.averagePriceCentKwh!.toFixed(2)),
     );
 
     // "Hour of max consumption / production and the difference between them".
@@ -78,8 +78,8 @@ test.describe('single day view', () => {
   test('cheapest hours default to three and are the actual cheapest', async ({ page, request }) => {
     const api = await getDay(request, FIXTURES.negativeStreakDay);
     const cheapestThree = api.hours
-      .filter((h) => h.priceSntKwh !== null)
-      .sort((a, b) => a.priceSntKwh! - b.priceSntKwh!)
+      .filter((h) => h.priceCentKwh !== null)
+      .sort((a, b) => a.priceCentKwh! - b.priceCentKwh!)
       .slice(0, 3)
       .map((h) => `${String(h.hour).padStart(2, '0')}:00`);
 

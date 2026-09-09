@@ -23,7 +23,7 @@ export async function getDay(request: APIRequestContext, date: string): Promise<
   return dayResponse.parse(await res.json());
 }
 
-/** '719,282,090 kWh' -> 719282090, '12.16 snt/kWh' -> 12.16, '—' -> null. */
+/** '719,282,090 kWh' -> 719282090, '12.16 cent/kWh' -> 12.16, '—' -> null. */
 export function parseMetric(text: string): number | null {
   const cleaned = text.replace(/,/g, '').replace(/[^\d.-]/g, '');
   if (cleaned === '' || cleaned === '-') return null;

@@ -67,8 +67,8 @@ function AreaPanel({ title, dataKey, color, empty, hours }: PanelProps) {
 }
 
 function PricePanel({ hours, cheapestHours }: { hours: DayHour[]; cheapestHours: number[] }) {
-  const hasData = hours.some((h) => h.priceSntKwh !== null);
-  const hasNegative = hours.some((h) => h.priceSntKwh !== null && h.priceSntKwh < 0);
+  const hasData = hours.some((h) => h.priceCentKwh !== null);
+  const hasNegative = hours.some((h) => h.priceCentKwh !== null && h.priceCentKwh < 0);
   const cheapestSet = new Set(cheapestHours);
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
@@ -104,13 +104,13 @@ function PricePanel({ hours, cheapestHours }: { hours: DayHour[]; cheapestHours:
             )}
             <Line
               type="monotone"
-              dataKey="priceSntKwh"
+              dataKey="priceCentKwh"
               stroke="#0f172a"
               strokeWidth={2}
               dot={(props) => {
                 const { cx, cy, payload, index } = props;
                 const key = `dot-${index}`;
-                if (cx === undefined || cy === undefined || payload?.priceSntKwh === null) {
+                if (cx === undefined || cy === undefined || payload?.priceCentKwh === null) {
                   return <g key={key} />;
                 }
                 const isCheapest = cheapestSet.has(payload.hour);

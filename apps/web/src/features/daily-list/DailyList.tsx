@@ -34,7 +34,7 @@ const COLUMNS: ColumnDef[] = [
   { key: 'date', label: 'Date', align: 'left' },
   { key: 'productionKwh', label: 'Production', align: 'right' },
   { key: 'consumptionKwh', label: 'Consumption', align: 'right' },
-  { key: 'averagePriceSntKwh', label: 'Avg price', align: 'right' },
+  { key: 'averagePriceCentKwh', label: 'Avg price', align: 'right' },
   { key: 'longestNegativePriceStreakHours', label: 'Neg-price streak', align: 'right' },
 ];
 
@@ -215,7 +215,7 @@ export function DailyList() {
                       </div>
                     </td>
                     <td className="px-4 py-2 text-right">
-                      <div>{formatPrice(row.averagePriceSntKwh)}</div>
+                      <div>{formatPrice(row.averagePriceCentKwh)}</div>
                       <div className="text-xs text-slate-400">
                         {formatCoverage(row.priceHoursReported, row.hoursTotal)}
                       </div>

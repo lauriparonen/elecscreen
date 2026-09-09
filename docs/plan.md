@@ -9,7 +9,7 @@ Working doc. Check things off as they land. Notes and decisions inline.
 - [x] `pnpm install` clean, `pnpm format:check` green
 - [x] Confirm docker db comes up: `docker compose up -d`, then `psql` in and eyeball a few rows
   - [x] Verify `starttime` column type — `timestamp without time zone`. DST caveat still applies; group by `date`, not by dividing timestamps.
-  - [x] Verify `hourlyprice` unit by sample values — min -50, max 235.104, avg ~10.35 → consistent with snt/kWh (VAT-incl).
+  - [x] Verify `hourlyprice` unit by sample values — min -50, max 235.104, avg ~10.35 → consistent with cent/kWh (VAT-incl).
   - [x] Note seed date range: 2020-12-31 → 2024-10-01, 1371 distinct dates. Early rows have null consumption/price (rows exist for 2020-12-31 22:00/23:00 with only production filled) — nulls per-column are real, not just theoretical.
   - Schema surprise: actual column/table names are lowercase unquoted (`electricitydata`, `starttime`, `productionamount`, `consumptionamount`, `hourlyprice`, `date`, `id`). Original brief's camelCase was misleading. `id` is `bigint`, not `integer`. Only `id` is `NOT NULL` — every metric column plus `date` and `starttime` are nullable.
   - Timestamp convention TBD: row 1 has `date=2020-12-31`, `starttime=2020-12-31 22:00:00`. If UTC, that's 2021-01-01 00:00 Finland local — but `date` matches the UTC calendar day, so `date` looks like `starttime::date` (UTC-based). Need to decide whether the UI presents "days" as UTC or Europe/Helsinki when building `/api/daily`.
@@ -32,11 +32,11 @@ Goal: `curl localhost:3000/health` returns `{ok: true}`, and one real endpoint r
 
 ### /api/daily notes
 
-- Response shape (flat, per row): `date`, `productionKwh`, `consumptionKwh`, `averagePriceSntKwh`, `productionHoursReported`, `consumptionHoursReported`, `priceHoursReported`, `hoursTotal`, `longestNegativePriceStreakHours`. Wrapped in `{ data: [...] }`.
+- Response shape (flat, per row): `date`, `productionKwh`, `consumptionKwh`, `averagePriceCentKwh`, `productionHoursReported`, `consumptionHoursReported`, `priceHoursReported`, `hoursTotal`, `longestNegativePriceStreakHours`. Wrapped in `{ data: [...] }`.
 - Null strategy: metric fields nullable (SUM/AVG of all-null → null). Per-metric `hoursReported` lets the UI distinguish "no data reported" from "reported and zero".
-- Unit normalization at the SQL layer: production MWh → kWh via `* 1000`; consumption already kWh; price stays snt/kWh. All aggregates cast `::float8` so pg returns JS numbers, not strings.
+- Unit normalization at the SQL layer: production MWh → kWh via `* 1000`; consumption already kWh; price stays cent/kWh. All aggregates cast `::float8` so pg returns JS numbers, not strings.
 - Negative-price streak: gaps-and-islands CTE using `((hourlyprice < 0) IS TRUE)` as the run predicate — a null-price hour is treated as "not negative", correctly breaking a streak instead of silently spanning across a data gap. Drafted in `scratchpad/daily.sql` first, then ported to a Kysely `sql\`...\`` fragment in [apps/api/src/queries/daily.ts](apps/api/src/queries/daily.ts).
-- Verification: 1371 rows returned (matches distinct-date count). 2024-09-29 has a 3-hour negative streak at avg 0.69 snt/kWh — matches psql draft. 2020-12-31 boundary: 2 hours, no price → `averagePriceSntKwh: null`, streak 0.
+- Verification: 1371 rows returned (matches distinct-date count). 2024-09-29 has a 3-hour negative streak at avg 0.69 cent/kWh — matches psql draft. 2020-12-31 boundary: 2 hours, no price → `averagePriceCentKwh: null`, streak 0.
 - Consumption coverage (verified in adminer): `consumptionamount` is null in 10,186 of 32,838 rows (~31%). Filled span is roughly 2023–2024; null elsewhere, including a tail gap in Sep–Oct 2024. UI needs to render "no consumption reported" days without crashing, but it's not the majority case.
 
 ## Phase 2 — Shared schemas
@@ -64,7 +64,7 @@ Goal: table on screen showing real data from the api.
 
 ## Phase 4 — Required feature complete
 
-- [x] Daily list shows: date, total consumption (kWh), total production (kWh), avg price (snt/kWh), longest negative-price streak (hours)
+- [x] Daily list shows: date, total consumption (kWh), total production (kWh), avg price (cent/kWh), longest negative-price streak (hours)
 - [x] Nulls / partial-coverage days handled visibly (not silently dropped, not shown as 0)
 - [x] Empty state, loading state, error state
 - [] README first pass — how to run, what's implemented, AI disclosure
@@ -80,7 +80,7 @@ Goal: table on screen showing real data from the api.
 - [x] Single-day view route
   - [x] Hour of max consumption, hour of max production, delta
   - [x] "Cheapest hours" — top N by lowest price, configurable (stepper on the view)
-  - [x] Recharts: **stacked small multiples**, not twin axes (twin kWh/snt-kWh routinely mislead). Three panels — production (area), consumption (area), price (line + zero reference + negative-region shade + cheapest-hour dots). Shared x-axis + `syncId` so tooltips align.
+  - [x] Recharts: **stacked small multiples**, not twin axes (twin kWh/cent-kWh routinely mislead). Three panels — production (area), consumption (area), price (line + zero reference + negative-region shade + cheapest-hour dots). Shared x-axis + `syncId` so tooltips align.
 
 ### Phase 5b plan — single day view
 
@@ -98,9 +98,9 @@ API: `GET /api/day/:date`
   ```ts
   {
     date: string,
-    hours: Array<{ hour, starttime, productionKwh, consumptionKwh, priceSntKwh }>,
+    hours: Array<{ hour, starttime, productionKwh, consumptionKwh, priceCentKwh }>,
     summary: {
-      productionKwh, consumptionKwh, averagePriceSntKwh,
+      productionKwh, consumptionKwh, averagePriceCentKwh,
       productionHoursReported, consumptionHoursReported, priceHoursReported, hoursTotal,
       longestNegativePriceStreakHours,
       peakConsumption: { hour, valueKwh } | null,

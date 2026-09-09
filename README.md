@@ -111,7 +111,7 @@ curl 'localhost:3000/api/daily?dateFrom=2023-07-02&dateTo=2023-07-02'
       "date": "2023-07-02",
       "productionKwh": 711648000,
       "consumptionKwh": null,
-      "averagePriceSntKwh": 0.644125,
+      "averagePriceCentKwh": 0.644125,
       "productionHoursReported": 24,
       "consumptionHoursReported": 0,
       "priceHoursReported": 24,
@@ -125,7 +125,7 @@ curl 'localhost:3000/api/daily?dateFrom=2023-07-02&dateTo=2023-07-02'
 }
 ```
 
-Energy is normalised to **kWh** everywhere; price stays **snt/kWh** (VAT-incl.).
+Energy is normalised to **kWh** everywhere; price stays **cent/kWh** (VAT-incl.).
 Request and response shapes are Zod schemas in [`packages/shared`](packages/shared/src) —
 the API validates and serialises with them, the web client re-parses every response
 through them, and the E2E suite asserts against them. One definition, three consumers.
@@ -137,7 +137,7 @@ through them, and the E2E suite asserts against them. One definition, three cons
 The parts of this dataset that punish assumptions. Longer write-ups and the dated
 decisions log live in [docs/plan.md](docs/plan.md).
 
-- **Three different units.** Production is MWh/h, consumption is kWh, price is cents per kWh (denoted as snt/kWh).
+- **Three different units.** Production is MWh/h, consumption is kWh, price is cents per kWh (denoted as cent/kWh).
   Conversion happens in SQL (`productionamount * 1000`) so nothing downstream has to
   remember.
 - **Nulls are the normal case, not an edge case.** `consumptionamount` is null in ~31% of

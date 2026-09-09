@@ -17,10 +17,10 @@ export function DayView() {
   const cheapestHours = useMemo(() => {
     if (!data) return [];
     return data.hours
-      .filter((h): h is typeof h & { priceSntKwh: number } => h.priceSntKwh !== null)
-      .sort((a, b) => a.priceSntKwh - b.priceSntKwh)
+      .filter((h): h is typeof h & { priceCentKwh: number } => h.priceCentKwh !== null)
+      .sort((a, b) => a.priceCentKwh - b.priceCentKwh)
       .slice(0, cheapestN)
-      .map((h) => ({ hour: h.hour, priceSntKwh: h.priceSntKwh }));
+      .map((h) => ({ hour: h.hour, priceCentKwh: h.priceCentKwh }));
   }, [data, cheapestN]);
 
   const setCheapestN = (n: number) => {
@@ -77,7 +77,7 @@ export function DayView() {
             <StatCard
               testId="stat-price"
               label="Avg price"
-              value={formatPrice(data.summary.averagePriceSntKwh)}
+              value={formatPrice(data.summary.averagePriceCentKwh)}
               sublabel={formatCoverage(data.summary.priceHoursReported, data.summary.hoursTotal)}
             />
             <StatCard
@@ -132,7 +132,7 @@ export function DayView() {
                   >
                     <span className="font-mono text-slate-700">{formatHour(h.hour)}</span>
                     <span className="font-semibold text-slate-900 tabular-nums">
-                      {formatPrice(h.priceSntKwh)}
+                      {formatPrice(h.priceCentKwh)}
                     </span>
                   </li>
                 ))}
@@ -167,7 +167,7 @@ export function DayView() {
                     <td className="py-1 pr-4 text-right tabular-nums">
                       {formatKwh(h.consumptionKwh)}
                     </td>
-                    <td className="py-1 text-right tabular-nums">{formatPrice(h.priceSntKwh)}</td>
+                    <td className="py-1 text-right tabular-nums">{formatPrice(h.priceCentKwh)}</td>
                   </tr>
                 ))}
               </tbody>

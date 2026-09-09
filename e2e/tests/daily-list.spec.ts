@@ -47,7 +47,7 @@ test.describe('daily statistics list', () => {
     expect(production).toContain(`${expected.productionHoursReported}/${expected.hoursTotal} h`);
 
     const price = await cells.nth(3).innerText();
-    expect(price.split('\n')[0]).toContain('snt/kWh');
+    expect(price.split('\n')[0]).toContain('cent/kWh');
     expect(price).toContain(`${expected.priceHoursReported}/${expected.hoursTotal} h`);
 
     const streak = await cells.nth(4).innerText();

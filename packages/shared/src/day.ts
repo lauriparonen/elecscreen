@@ -9,7 +9,7 @@ export const dayHour = z.object({
   starttime: z.string(),
   productionKwh: z.number().nullable(),
   consumptionKwh: z.number().nullable(),
-  priceSntKwh: z.number().nullable(),
+  priceCentKwh: z.number().nullable(),
 });
 
 export const dayPeak = z.object({
@@ -20,7 +20,7 @@ export const dayPeak = z.object({
 export const daySummary = z.object({
   productionKwh: z.number().nullable(),
   consumptionKwh: z.number().nullable(),
-  averagePriceSntKwh: z.number().nullable(),
+  averagePriceCentKwh: z.number().nullable(),
   productionHoursReported: z.number().int(),
   consumptionHoursReported: z.number().int(),
   priceHoursReported: z.number().int(),

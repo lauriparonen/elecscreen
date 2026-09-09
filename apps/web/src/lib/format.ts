@@ -11,7 +11,7 @@ export function formatKwh(value: number | null): string {
 
 export function formatPrice(value: number | null): string {
   if (value === null) return '—';
-  return `${priceFmt.format(value)} snt/kWh`;
+  return `${priceFmt.format(value)} cent/kWh`;
 }
 
 export function formatCoverage(reported: number, total: number): string {

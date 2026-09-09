@@ -12,13 +12,13 @@ interface HourRow {
   starttime: string;
   productionKwh: number | null;
   consumptionKwh: number | null;
-  priceSntKwh: number | null;
+  priceCentKwh: number | null;
 }
 
 interface AggRow {
   productionKwh: number | null;
   consumptionKwh: number | null;
-  averagePriceSntKwh: number | null;
+  averagePriceCentKwh: number | null;
   productionHoursReported: number;
   consumptionHoursReported: number;
   priceHoursReported: number;
@@ -42,7 +42,7 @@ export async function getDayStats(date: string): Promise<DayResult | null> {
           starttime::text                            AS starttime,
           (productionamount * 1000)::float8          AS "productionKwh",
           consumptionamount::float8                  AS "consumptionKwh",
-          hourlyprice::float8                        AS "priceSntKwh"
+          hourlyprice::float8                        AS "priceCentKwh"
         FROM electricitydata
         WHERE date = ${date}::date
         ORDER BY starttime
@@ -51,7 +51,7 @@ export async function getDayStats(date: string): Promise<DayResult | null> {
         SELECT
           (SUM(productionamount) * 1000)::float8 AS "productionKwh",
           SUM(consumptionamount)::float8         AS "consumptionKwh",
-          AVG(hourlyprice)::float8               AS "averagePriceSntKwh",
+          AVG(hourlyprice)::float8               AS "averagePriceCentKwh",
           COUNT(productionamount)::int           AS "productionHoursReported",
           COUNT(consumptionamount)::int          AS "consumptionHoursReported",
           COUNT(hourlyprice)::int                AS "priceHoursReported",

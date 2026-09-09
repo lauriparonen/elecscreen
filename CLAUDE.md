@@ -19,13 +19,13 @@ Single table `electricitydata` in the provided `init-db.tar.gz`:
 | `starttime`         | TIMESTAMP     | —                  | no       | verify tz-awareness before writing queries |
 | `productionamount`  | NUMERIC(11,5) | MWh/h              | yes      |                                            |
 | `consumptionamount` | NUMERIC(11,3) | kWh                | yes      |                                            |
-| `hourlyprice`       | NUMERIC(6,3)  | snt/kWh (VAT-incl) | yes      | from porssisahko.net                       |
+| `hourlyprice`       | NUMERIC(6,3)  | cent/kWh (VAT-incl) | yes      | from porssisahko.net                       |
 
 Column names are lowercase and were created quoted, so raw SQL must double-quote them: `"productionamount"`.
 
 ## Critical gotchas (read before touching queries)
 
-1. **Unit mismatch.** Production is MWh/h, consumption is kWh, price is snt/kWh. Convert at the query layer, expose consistent units in the API. Recommended: normalize energy to kWh in responses (multiply production by 1000).
+1. **Unit mismatch.** Production is MWh/h, consumption is kWh, price is cent/kWh. Convert at the query layer, expose consistent units in the API. Recommended: normalize energy to kWh in responses (multiply production by 1000).
 2. **`MWh/h` == `MWh` per row.** Each row is one hour, so `SUM(productionamount)` over a day yields MWh.
 3. **DST.** Finland (Europe/Helsinki) has 23-hour and 25-hour days twice a year. Do **not** assume 24 rows per date. Group by the `date` column, not by dividing timestamps.
 4. **Nullable metric columns.** All three metric columns can be null. Aggregates need per-metric null handling, and the UI should surface a data-coverage indicator (e.g. "22/24 hours reported") rather than silently dropping nulls.

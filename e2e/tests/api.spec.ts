@@ -24,7 +24,7 @@ test.describe('API contract', () => {
       // A metric can be null, but then nothing was reported for it that day.
       if (row.productionKwh === null) expect(row.productionHoursReported).toBe(0);
       if (row.consumptionKwh === null) expect(row.consumptionHoursReported).toBe(0);
-      if (row.averagePriceSntKwh === null) expect(row.priceHoursReported).toBe(0);
+      if (row.averagePriceCentKwh === null) expect(row.priceHoursReported).toBe(0);
       expect(row.longestNegativePriceStreakHours).toBeLessThanOrEqual(row.hoursTotal);
     }
   });
@@ -133,8 +133,8 @@ test.describe('API contract', () => {
       sum((h) => h.consumptionKwh),
       0,
     );
-    expect(summary.averagePriceSntKwh!).toBeCloseTo(
-      sum((h) => h.priceSntKwh) / summary.priceHoursReported,
+    expect(summary.averagePriceCentKwh!).toBeCloseTo(
+      sum((h) => h.priceCentKwh) / summary.priceHoursReported,
       5,
     );
 
@@ -155,7 +155,7 @@ test.describe('API contract', () => {
     let longest = 0;
     let run = 0;
     for (const h of hours) {
-      run = h.priceSntKwh !== null && h.priceSntKwh < 0 ? run + 1 : 0;
+      run = h.priceCentKwh !== null && h.priceCentKwh < 0 ? run + 1 : 0;
       longest = Math.max(longest, run);
     }
 

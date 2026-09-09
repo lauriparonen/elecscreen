@@ -17,7 +17,7 @@ const SORT_COLUMN: Record<DailySortBy, string> = {
   date: 'a.date',
   productionKwh: 'a."productionKwh"',
   consumptionKwh: 'a."consumptionKwh"',
-  averagePriceSntKwh: 'a."averagePriceSntKwh"',
+  averagePriceCentKwh: 'a."averagePriceCentKwh"',
   longestNegativePriceStreakHours: 'COALESCE(l.len, 0)',
 };
 
@@ -51,7 +51,7 @@ export async function getDailyStats(
           date,
           (SUM(productionamount) * 1000)::float8 AS "productionKwh",
           SUM(consumptionamount)::float8         AS "consumptionKwh",
-          AVG(hourlyprice)::float8               AS "averagePriceSntKwh",
+          AVG(hourlyprice)::float8               AS "averagePriceCentKwh",
           COUNT(productionamount)::int           AS "productionHoursReported",
           COUNT(consumptionamount)::int          AS "consumptionHoursReported",
           COUNT(hourlyprice)::int                AS "priceHoursReported",
@@ -84,7 +84,7 @@ export async function getDailyStats(
         a.date,
         a."productionKwh",
         a."consumptionKwh",
-        a."averagePriceSntKwh",
+        a."averagePriceCentKwh",
         a."productionHoursReported",
         a."consumptionHoursReported",
         a."priceHoursReported",

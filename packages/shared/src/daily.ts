@@ -4,7 +4,7 @@ export const dailyStatsRow = z.object({
   date: z.string(),
   productionKwh: z.number().nullable(),
   consumptionKwh: z.number().nullable(),
-  averagePriceSntKwh: z.number().nullable(),
+  averagePriceCentKwh: z.number().nullable(),
   productionHoursReported: z.number().int(),
   consumptionHoursReported: z.number().int(),
   priceHoursReported: z.number().int(),
@@ -16,7 +16,7 @@ export const dailySortBy = z.enum([
   'date',
   'productionKwh',
   'consumptionKwh',
-  'averagePriceSntKwh',
+  'averagePriceCentKwh',
   'longestNegativePriceStreakHours',
 ]);
 export const dailySortDir = z.enum(['asc', 'desc']);
