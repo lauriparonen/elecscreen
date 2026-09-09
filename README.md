@@ -24,10 +24,9 @@ cp apps/api/.env.example apps/api/.env    # defaults already match docker-compos
 pnpm dev                                  # API :3000 and web :5173, in parallel
 ```
 
-Then open **http://localhost:5173**.
+Then open **http://localhost:5173** (or whichever port is free, indicated by Vite).
 
-`apps/api/.env` needs these two values (identical to the upstream compose file; the
-example file uses placeholders purely to keep the habit):
+`apps/api/.env` needs these two values (identical to the upstream compose file; the example file uses placeholders purely to keep the habit):
 
 ```
 DATABASE_URL=postgres://academy:academy@localhost:5432/electricity
@@ -39,8 +38,6 @@ PORT=3000
 | `localhost:5173`        | Web app                                 |
 | `localhost:3000/health` | API health check                        |
 | `localhost:8088`        | Adminer (creds in `docs/assignment.md`) |
-
-The database container takes a couple of minutes to seed on first run.
 
 Other scripts: `pnpm typecheck`, `pnpm format:check`, `pnpm test:e2e`.
 
@@ -63,7 +60,7 @@ a single `index.js` — no `node_modules`, no package manager, non-root user.
 
 ## Status
 
-Everything in the assignment is implemented except two of the "surprise us" bonuses.
+Everything in the assignment is implemented except cloud deployment.
 
 **Required — daily statistics list**
 
@@ -83,7 +80,7 @@ Everything in the assignment is implemented except two of the "surprise us" bonu
 
 - [x] Single-day view: totals, hour of peak consumption, hour of peak production, the gap
       between them, and the N cheapest hours (adjustable)
-- [x] Graph visualisations (three synced panels — production, consumption, price)
+- [x] Graph visualisations (three synced panels — production, consumption, price; the price graph highlights the cheapest N hours)
 
 **Surprise us**
 
@@ -137,27 +134,14 @@ through them, and the E2E suite asserts against them. One definition, three cons
 
 ## Data notes
 
-The parts of this dataset that punish assumptions. Longer write-ups and the dated
-decisions log live in [docs/plan.md](docs/plan.md).
+The parts of this dataset that required consideration. Detailed write-ups and the dated decision log are in [docs/plan.md](docs/plan.md).
 
-- **Three different units.** Production is MWh/h, consumption is kWh, price is cents per kWh (denoted as cent/kWh).
-  Conversion happens in SQL (`productionamount * 1000`) so nothing downstream has to
-  remember.
-- **Nulls are the normal case, not an edge case.** `consumptionamount` is null in ~31% of
-  rows. Every response carries a per-metric `hoursReported` count, so "no data" and "reported zero" stay distinguishable — the UI shows `—` plus a coverage badge, never a misleading `0`.
-- **Days are not 24 hours.** Spring-forward days in this data have 23 rows. Aggregates
-  group by the `date` column and report `hoursTotal`; nothing divides timestamps or
-  assumes a row count. Pinned by an E2E test.
-- **The day boundary is the source's, not ours.** `date` is UTC-derived, and porssisahko
-  documents keying on UTC deliberately so DST introduces no special case. Grouping by the
-  stored column as-is keeps our numbers reconcilable with the source rather than silently
-  re-cut.
-- **Negative-price streaks are solved in SQL**, as gaps-and-islands with window functions.
-  The run predicate is `(hourlyprice < 0) IS TRUE`, so an hour with no price _breaks_ a
-  streak instead of invisibly bridging a data gap.
-- **`NUMERIC` arrives as a string in node-pg.** Raw columns are typed `string | null`;
-  aggregates cast to `::float8` so JSON numbers come out as numbers. The `DATE` parser is
-  overridden to return plain `YYYY-MM-DD` and dodge timezone shifts entirely.
+- **Three different units.** Production is MWh/h, consumption is kWh, and price is cents per kWh (`cent/kWh`). Conversions happen in SQL (`productionamount * 1000`) so downstream code stays clean.
+- **Nulls are expected data, not edge cases.** `consumptionamount` is null in ~31% of rows. Responses include a per-metric `hoursReported` count to distinguish missing data from zero values — allowing the UI to show `—` with a coverage badge instead of a misleading `0`.
+- **Days vary in length.** Spring-forward days contain only 23 rows. Aggregates group by the `date` column and report `hoursTotal` directly, avoiding timestamp division or assumed row counts. Covered by an E2E test.
+- **Day boundaries follow the source.** The `date` column uses UTC, as the porssisahko source explicitly keys on UTC to avoid DST handling. Grouping by this stored column keeps metrics aligned with the source data.
+- **Negative-price streaks use SQL gaps-and-islands.** Streak detection relies on window functions with the predicate `(hourlyprice < 0) IS TRUE`. An hour with missing price data breaks a streak rather than bridging the gap.
+- **`NUMERIC` returns as a string in node-pg.** Raw columns use `string | null`, while aggregates cast to `::float8` so the API outputs JSON numbers. The `DATE` parser is overridden to return `YYYY-MM-DD` strings, preventing timezone offsets.
 
 ---
 
@@ -200,7 +184,7 @@ recomputed in JS and compared. Details in [e2e/README.md](e2e/README.md).
 
 ## Use of AI
 
-I used Claude Code (primarily Opus 4.7, but also Opus 5) as a coding assistant throughout this project. Essentially all code was written by agents, but I reviewed each diff and made the architectural decisions.
+I used Claude Code (primarily Opus 4.7, but also Opus 5) as a coding assistant throughout this project. Essentially all code was written by agents, but I reviewed each diff and made the architectural decisions. 
 
 The steering documents are checked in and readable; [CLAUDE.md](CLAUDE.md) is the context and constraints I gave the tool, and [docs/plan.md](docs/plan.md) is the running plan and dated decisions log I worked from. In addition to setting development constraints for the agents to follow, both served as living documentation; they can be read and reviewed.
 
