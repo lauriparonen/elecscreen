@@ -165,17 +165,18 @@ pnpm workspaces, ESM, strict TypeScript (`noUncheckedIndexedAccess` on).
 ```
 apps/api        Fastify + Kysely. routes/ stay thin; queries/ hold the SQL.
 apps/web        Vite + React. features/daily-list, features/day-view.
-packages/shared Zod schemas — the API contract, imported by all three.
+packages/shared Zod schemas: the shared API contract.
 e2e             Playwright, against the real stack.
 docs            plan.md (working log + decisions) · assignment.md (upstream brief)
 ```
 
-Why these: **Fastify** for first-class Zod schema validation and serialisation via
-`fastify-type-provider-zod`. **Kysely** for typed SQL without an ORM's opinions — the
-schema is one table, so its `Database` interface is handwritten, and window-function work
-drops to raw SQL fragments where the builder would only get in the way. **TanStack
-Router** for typed search params, which is what makes the URL the single source of truth
-for list state.
+### How a request travels 
+
+![Request path: browser through Vite's dev proxy to Fastify and Postgres, with packages/shared as the Zod contract at both ends](docs/request-path.png)
+
+Fastify handles input validation and response serialization natively using `fastify-type-provider-zod`. Kysely provides type safety over raw SQL without the overhead of a full ORM, which is ideal here since the schema has only one table and complex queries (like window functions) run through raw fragments anyway. Tanstack router binds search parameters directly to TS types, keeping the URL as the single source of truth for UI state.
+
+The general motivation for this particular full-TypeScript architecture was enforcing rigorous type coherence and data validation on a structural level. [packages/shared](packages/shared) is the HTTP contract as runnable Zod, imported by API, web, and e2e. Types are derived from the same objects via `z.infer`, so TS cannot drift from the schema. 
 
 ---
 
@@ -198,9 +199,7 @@ recomputed in JS and compared. Details in [e2e/README.md](e2e/README.md).
 
 I used Claude Code (primarily Opus 4.7, but also Opus 5) as a coding assistant throughout this project. Essentially all code was written by agents, but I reviewed each diff and made the architectural decisions.
 
-**How.** The steering documents are checked in and readable; [CLAUDE.md](CLAUDE.md) is
-the context and constraints I gave the tool, and [docs/plan.md](docs/plan.md) is the
-running plan and dated decisions log I worked from. In addition to setting development constraints for the agents to follow, both served as living documentation; they can be read and reviewed.
+The steering documents are checked in and readable; [CLAUDE.md](CLAUDE.md) is the context and constraints I gave the tool, and [docs/plan.md](docs/plan.md) is the running plan and dated decisions log I worked from. In addition to setting development constraints for the agents to follow, both served as living documentation; they can be read and reviewed.
 
 ---
 
