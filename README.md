@@ -1,10 +1,13 @@
-# Electricity statistics
+# Elecscreen — daily electricity statistics
 
 Solita Dev Academy Autumn 2026 pre-assignment: a full-stack TypeScript app over the
 provided Finnish electricity dataset (Fingrid production/consumption + porssisahko.net
 spot prices).
 
 The original assignment brief is kept verbatim in [docs/assignment.md](docs/assignment.md).
+
+#### Brief demo:
+https://github.com/user-attachments/assets/eb3b2e15-59a8-4ba1-9b23-1c68cc9f2c37
 
 - **Tech stack:** Fastify · Kysely · Postgres · React · TanStack Query/Router/Table · Recharts · Tailwind · Playwright
 
